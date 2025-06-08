@@ -29,7 +29,7 @@ async fn main() {
     dotenv::dotenv().ok();
     let webhook_route = warp::path("webhook")
         .and(warp::post())
-        .and(warp::header::<String>("X-Hub-Singature-256"))
+        .and(warp::header::<String>("X-Hub-Signature-256"))
         .and(warp::body::bytes())
         .and_then(handle_webhook);
     let ping_route = warp::path("ping").and(warp::get()).and_then(handle_ping);
