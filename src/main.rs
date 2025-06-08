@@ -33,7 +33,9 @@ async fn main() {
         .and(warp::header::<String>("X-Hub-Singature-256"))
         .and(warp::body::bytes())
         .and_then(handle_webhook);
-
+    
+    println!("🚀 Server running on port {}", PORT);
+    
     warp::serve(webhook_route).run(([0, 0, 0, 0], PORT)).await;
 }
 
