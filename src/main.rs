@@ -48,22 +48,22 @@ async fn handle_webhook(singature: String, body: Bytes) -> Result<impl Reply, Re
         ));
     }
 
-    let event: GitHubEvent = match serde_json::from_slice(&body) {
-        Ok(event) => event,
-        Err(why) => {
-            return Ok(warp::reply::with_status(
-                format!("Invaild Json: {why}"),
-                warp::http::StatusCode::BAD_REQUEST,
-            ));
-        }
-    };
+    // let event: GitHubEvent = match serde_json::from_slice(&body) {
+    //     Ok(event) => event,
+    //     Err(why) => {
+    //         return Ok(warp::reply::with_status(
+    //             format!("Invaild Json: {why}"),
+    //             warp::http::StatusCode::BAD_REQUEST,
+    //         ));
+    //     }
+    // };
 
-    if !event.repository.default_branch.ends_with("/master") {
-        return Ok(warp::reply::with_status(
-            "Ignoring non-master branch".to_string(),
-            warp::http::StatusCode::OK,
-        ));
-    };
+    // if !event.repository.default_branch.ends_with("/master") {
+    //     return Ok(warp::reply::with_status(
+    //         "Ignoring non-master branch".to_string(),
+    //         warp::http::StatusCode::OK,
+    //     ));
+    // };
 
     // run
     tokio::spawn(async {
