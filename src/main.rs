@@ -51,9 +51,9 @@ async fn handle_webhook(singature: String, body: Bytes) -> Result<impl Reply, Re
 
     let event: GitHubEvent = match serde_json::from_slice(&body) {
         Ok(event) => event,
-        Err(_why) => {
+        Err(why) => {
             return Ok(warp::reply::with_status(
-                "Invaild Json:".to_string(),
+                format!("Invaild Json: {why}"),
                 warp::http::StatusCode::BAD_REQUEST,
             ));
         }
