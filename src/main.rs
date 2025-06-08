@@ -14,12 +14,12 @@ lazy_static! {
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct GitHubEvent {
-    default_branch:String,
     repository: Repository,
 }
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct Repository {
+    default_branch:String,
     clone_url: String,
 }
 
@@ -58,7 +58,7 @@ async fn handle_webhook(singature: String, body: Bytes) -> Result<impl Reply, Re
         }
     };
 
-    if !event.default_branch.ends_with("/master") {
+    if !event.repository.default_branch.ends_with("/master") {
         return Ok(warp::reply::with_status(
             "Ignoring non-master branch".to_string(),
             warp::http::StatusCode::OK,
