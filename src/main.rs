@@ -6,11 +6,10 @@ use std::process::Command;
 use warp::hyper::body::Bytes;
 use warp::{Filter, Rejection, Reply};
 
-const PORT: u16 = 33275;
-
 lazy_static! {
     ///  GitHub webhook secret
     static ref SECRET: String = std::env::var("GITHUB_HOOK_SECRET").expect("SECRET must be set");
+    static ref PORT:u16 = std::env::var("HOOK_PORT").unwrap_or("33275".to_string()).parse().unwrap();
 }
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
@@ -33,13 +32,13 @@ async fn main() {
         .and(warp::header::<String>("X-Hub-Singature-256"))
         .and(warp::body::bytes())
         .and_then(handle_webhook);
-    let ping_route = warp::path("ping")
-        .and(warp::get())
-        .and_then(handle_ping);
+    let ping_route = warp::path("ping").and(warp::get()).and_then(handle_ping);
 
-    println!("🚀 Server running on port {}", PORT);
-    
-    warp::serve(webhook_route.or(ping_route)).run(([0, 0, 0, 0], PORT)).await;
+    println!("🚀 Server running on port {}", *PORT);
+
+    warp::serve(webhook_route.or(ping_route))
+        .run(([0, 0, 0, 0], *PORT))
+        .await;
 }
 
 async fn handle_webhook(singature: String, body: Bytes) -> Result<impl Reply, Rejection> {
