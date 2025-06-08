@@ -14,8 +14,7 @@ lazy_static! {
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct GitHubEvent {
-    #[serde(rename = "ref")]
-    r#ref: String,
+    default_branch:String,
     repository: Repository,
 }
 #[allow(dead_code)]
@@ -59,7 +58,7 @@ async fn handle_webhook(singature: String, body: Bytes) -> Result<impl Reply, Re
         }
     };
 
-    if !event.r#ref.ends_with("/master") {
+    if !event.default_branch.ends_with("/master") {
         return Ok(warp::reply::with_status(
             "Ignoring non-master branch".to_string(),
             warp::http::StatusCode::OK,
