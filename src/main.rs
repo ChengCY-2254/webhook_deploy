@@ -33,10 +33,13 @@ async fn main() {
         .and(warp::header::<String>("X-Hub-Singature-256"))
         .and(warp::body::bytes())
         .and_then(handle_webhook);
-    
+    let ping_route = warp::path("ping")
+        .and(warp::get())
+        .and_then(handle_ping);
+
     println!("🚀 Server running on port {}", PORT);
     
-    warp::serve(webhook_route).run(([0, 0, 0, 0], PORT)).await;
+    warp::serve(webhook_route.or(ping_route)).run(([0, 0, 0, 0], PORT)).await;
 }
 
 async fn handle_webhook(singature: String, body: Bytes) -> Result<impl Reply, Rejection> {
@@ -65,9 +68,9 @@ async fn handle_webhook(singature: String, body: Bytes) -> Result<impl Reply, Re
     };
 
     // run
-    tokio::spawn(async { 
-        if let Err(why) = deploy().await{
-            eprintln!("Deployment failed :{:?}",why);
+    tokio::spawn(async {
+        if let Err(why) = deploy().await {
+            eprintln!("Deployment failed :{:?}", why);
         }
     });
 
@@ -76,7 +79,12 @@ async fn handle_webhook(singature: String, body: Bytes) -> Result<impl Reply, Re
         warp::http::StatusCode::OK,
     ))
 }
-
+async fn handle_ping() -> Result<impl Reply, Rejection> {
+    Ok(warp::reply::with_status(
+        "Pong".to_string(),
+        warp::http::StatusCode::OK,
+    ))
+}
 fn verify_signature(secret: &str, body: &[u8], signature: &str) -> bool {
     let signature = signature.trim_start_matches("sha256=");
     let mut mac =
@@ -86,23 +94,23 @@ fn verify_signature(secret: &str, body: &[u8], signature: &str) -> bool {
     hex::encode(result) == signature
 }
 
-async fn deploy() ->Result<(),Box<dyn std::error::Error>>{
+async fn deploy() -> Result<(), Box<dyn std::error::Error>> {
     // 更新目标目录的代码
     run_command("git", &["pull"], "/home/ubuntu/discord_hub_bot")?;
     // 开始构建
     run_command("docker-compose", &["build"], "/home/ubuntu/discord_hub_bot")?;
     // 重启容器
-    run_command("docker-compose", &["up", "-d"], "/home/ubuntu/discord_hub_bot")?;
+    run_command(
+        "docker-compose",
+        &["up", "-d"],
+        "/home/ubuntu/discord_hub_bot",
+    )?;
     println!("✅ Deployment successful");
     Ok(())
 }
 
-
 fn run_command(cmd: &str, args: &[&str], cwd: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let output = Command::new(cmd)
-        .args(args)
-        .current_dir(cwd)
-        .output()?;
+    let output = Command::new(cmd).args(args).current_dir(cwd).output()?;
 
     if !output.status.success() {
         let msg = String::from_utf8_lossy(&output.stderr);
